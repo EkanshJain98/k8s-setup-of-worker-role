@@ -1,0 +1,56 @@
+-   name: "Downloading docker and iproute-tc"
+    yum:
+                 name: ["docker", "iproute-tc"]
+                 state: present
+
+-   name: "Starting docker service"
+    service:
+                 name: docker
+                 state: restarted
+                 enabled: yes
+
+-   name: "Setup YUM Repo for kubernetes"
+    yum_repository:
+                 name: Kubernetes
+                 description: YUM repo for K8s
+                 file: Kubernetes.repo
+                 baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+                 gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+                 enabled: yes 
+
+-   name: "Downloading kubeadm"
+    yum:
+                 name: kubeadm
+                 state: present
+
+-   name: "Kubelet service started"
+    service:
+            name: kubelet
+            state: restarted
+-   name: "copying daemon.json file" 
+    copy:
+                 src: daemon.json
+                 dest: /etc/docker/daemon.json 
+
+-   name: "Docker service Restarted"
+    service:
+                name: docker
+                state: restarted
+                enabled: yes
+
+-   name: "Setting value of ip6tables and iptables to 1"
+    ansible.posix.sysctl:
+                name: "{{ item }}"
+                value: '1'
+                sysctl_set: yes
+                state: present
+                reload: yes  
+    with_items:
+    -           net.bridge.bridge-nf-call-ip6tables
+    -           net.bridge.bridge-nf-call-iptables
+             
+-   shell:  "{{ hostvars['DUMMY_HOST']['NEW_TOKEN'] }}" 
+    ignore_errors: yes 
+#-   name: "Joining with Master Node"
+#    shell:     "bash /token"
+#    ignore_errors: yes
